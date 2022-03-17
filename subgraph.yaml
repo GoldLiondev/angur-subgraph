@@ -1,0 +1,122 @@
+specVersion: 0.0.1
+description: Augur is a decentralized oracle and prediction market protocol built on the Ethereum blockchain. It allows you to forecast events and be rewarded for predicting them correctly.
+repository: https://github.com/graphprotocol/augur-subgraph
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Augur
+    network: mainnet
+    source:
+      address: "0x75228dce4d82566d93068a8d5d49435216551599" # Mainnet: 0x75228dce4d82566d93068a8d5d49435216551599  Rinkeby (Browser test):  0x990B2D2aF7e87cd015A607c3A95d7622c9bBeDe1
+      abi: Augur
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.1
+      language: wasm/assemblyscript
+      entities:
+        - Market
+        - InitialReport
+        - DisputeCrowdsourcer
+        - Universe
+        - Order
+        - ClaimedTradingProceed
+        - Token
+        - TransferredTokens
+        - BurnedTokens
+        - MintedTokens
+        - DisputeWindow
+      abis:
+        - name: Augur
+          file: ./abis/Augur.json
+      eventHandlers: # 28 total events , leave out EscapeHatchChanged, timestampset, so 26 handlers
+        # Market Handlers below
+        - event: MarketCreated(bytes32,string,string,address,address,address,bytes32[],uint256,int256,int256,uint8)
+          handler: handleMarketCreated
+        - event: ReportingParticipantDisavowed(address,address,address)
+          handler: handleReportingParticpiantDisavowed
+        - event: MarketFinalized(address,address)
+          handler: handleMarketFinalized
+        - event: MarketMigrated(address,address,address)
+          handler: handleMarketMigrated
+        - event: MarketMailboxTransferred(address,address,address,address,address)
+          handler: handleMarketMailboxTransferred
+        - event: MarketParticipantsDisavowed(address,address)
+          handler: handleMarketParticipantsDisavowed
+        - event: MarketTransferred(address,address,address,address)
+          handler: handleMarketTransferred
+        - event: CompleteSetsPurchased(address,address,address,uint256)
+          handler: handleCompleteSetPurchased
+        - event: CompleteSetsSold(address,address,address,uint256)
+          handler: handleCompleteSetSold
+        - event: TradingProceedsClaimed(address,address,address,address,uint256,uint256,uint256)
+          handler: handleTradingProceedsClaimed
+#          # Initial Report handlers Below
+        - event: InitialReportSubmitted(address,address,address,uint256,bool,uint256[],bool)
+          handler: handleInitialReportSubmitted
+        - event: InitialReporterRedeemed(address,address,address,uint256,uint256,uint256,uint256[])
+          handler: handleInitialReporterRedeemed
+        - event: InitialReporterTransferred(address,address,address,address)
+          handler: handleInitialReporterTransferred
+#          # Dispute Crowdsourcer handlers below
+        - event: DisputeCrowdsourcerCompleted(address,address,address)
+          handler: handleDisputeCrowdsourcerCompleted
+        - event: DisputeCrowdsourcerContribution(address,address,address,address,uint256)
+          handler: handleDisputeCrowdsourcerContribution
+        - event: DisputeCrowdsourcerCreated(address,address,address,uint256[],uint256,bool)
+          handler: handleDisputeCrowdsourcerCreated
+        - event: DisputeCrowdsourcerRedeemed(address,address,address,address,uint256,uint256,uint256,uint256[])
+          handler: handleDisputeCrowdsourcerRedeemed
+#          # Universe handlers below
+        - event: UniverseCreated(address,address,uint256[],bool)
+          handler: handleUniverseCreated
+        - event: UniverseForked(address)
+          handler: handleUniverseForked
+#          # Order handlers below
+        - event: OrderCanceled(address,address,address,bytes32,uint8,uint256,uint256)
+          handler: handleOrderCanceled
+        - event: OrderCreated(uint8,uint256,uint256,address,uint256,uint256,bytes32,bytes32,address,address)
+          handler: handleOrderCreated
+        - event: OrderFilled(address,address,address,bytes32,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bytes32)
+          handler: handleOrderFilled
+          # token handlers below
+#        - event: TokensTransferred(address,address,address,address,uint256,uint8,address)
+#          handler: handleTokensTransferred
+#        - event: TokensMinted(address,address,address,uint256,uint8,address)
+#          handler: handleTokensMinted
+#        - event: TokensBurned(address,address,address,uint256,uint8,address)
+#          handler: handleTokensBurned
+#          # dispute window handler below NOTE: does not exist on the current mainnet version
+#        - event: DisputeWindowCreated(address,address,uint256,uint256,uint256)
+#          handler: handleDisputeWindowCreated
+      file: ./src/mappings/Augur.ts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

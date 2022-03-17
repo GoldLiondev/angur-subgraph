@@ -1,0 +1,193 @@
+# Unused Events - Approval, Transfer (ERC20)
+# Events not stored - EscapeHatchChanged, TimestampSet, 
+
+# Events - MarketCreated, ReportingParticipantDisavowed, MarketFinalized, MarketMigrated, MarketMailboxTransferred, MarketParticipantsDisavowed, MarketTransferred, CompleteSetPurchase, CompleteSetSold,  TradingProceedsClaimed
+
+type Market @entity {
+    # event MarketCreated 
+    id: ID! # address market
+    topic: Bytes!
+    description: String
+    extraInfo: String 
+    universe: Bytes!
+    marketCreator: Bytes!
+    outcomes: [Bytes!]! 
+    marketCreationFee: BigInt
+    minPrice: BigInt
+    maxPrice: BigInt
+    marketType: String!
+
+    # event ReportingParticipantDisavowed (NOTE, never emitted)
+    reportingParticipantDisavowed: [Bytes!]! # might not need to be array
+
+    # event MarketParticipantDisavowed
+    marketParticipantsDisavowed: Boolean # the dispute crowdsourcers for a market in a universe have been disavowed
+
+    # event MarketFinalized
+    finalized: Boolean 
+
+    # event MarketMigrated
+    migrated: Bytes
+
+    # event MarketTransferred (NOTE, never emitted)
+    marketOwners: [Bytes!]!
+
+    # event MarketMailboxTransferred (NOTE, never emitted)
+    marketMailboxOwners: [Bytes!]!
+
+    # event CompleteSetPurchase
+    completeSetPurchasers: [Bytes!]!
+    numCompleteSetsPurchase: [BigInt!]!
+
+    # event CompleteSetSold
+    completeSetSellers: [Bytes!]!
+    numCompleteSetsSold: [BigInt!]!
+
+    # event TradingProceedsClaimed
+    tradingProceedsClaimed: [ClaimedTradingProceed!]! @derivedFrom(field: "id")
+    initialReports: [InitialReport!]! @derivedFrom(field:"id")
+    disputeCrowdsourcer: [DisputeCrowdsourcer!]! @derivedFrom(field: "id")
+}
+
+# Events - InitialReportSubmitted, InitialReporterRedeemed, InitialReporterTransferred
+type InitialReport @entity {
+    # event InitialReportSubmitted
+    id: ID! # address market
+    universe: Bytes!
+    amountStaked: BigInt!
+    isDesignatedReporter: Boolean # false null bug, no !
+    payoutNumerators: [BigInt!]!
+    invalid: Boolean
+
+    reporter: Bytes! # ONLY FIELD EDITED BY InitialReporterTransferred -
+
+    #event InitialReporterRedeemed 
+    amountRedeemed: BigInt
+    repReceived: BigInt
+    reportingFeesReceived: BigInt
+}
+
+# Events - DisputeCrowdsourcerCompleted, DisputeCrowdsourcerContribution, DisputeCrowdsourcerCreated, DisputeCrowdSourcerRedeemed
+type DisputeCrowdsourcer @entity {
+    # event DisputeCrowdsourcerCreated
+    id: ID! # address market
+    universe: Bytes!
+    disputeCrowdsourcer: Bytes!
+    payoutNumerators: [BigInt!]!
+    size: BigInt
+    invalid: Boolean
+
+    # event DisputeCrowdsourcerContribution
+    # Each element in these two arrays represents one contribution, i.e. all 0 elements are from the same event, and so on
+    reporters: [Bytes!]!
+    amountStaked: [BigInt!]!
+
+    # event DisputeCrowdsourcerCompleted
+    completed: Boolean # this gets triggered true when event Completed is done 
+
+    # event DisputeCrowdsourcedRedeemed
+    amountRedeemed: [BigInt!]! #event Redeemed
+    repReceived: [BigInt!]! #event Redeemed
+    reportingFeesReceived: [BigInt!]!
+}
+
+# Events - UniverseCreated, UniverseForked
+type Universe @entity {
+    id: ID! # universe ID
+    parentUniverse: Bytes! # genesis universe does not have a parent
+    payoutNumerators: [BigInt!]!
+    forked: Boolean
+    invalid: Boolean
+}
+
+# Events - OrderCanceled, OrderCreated, OrderFilled,
+# note - I find it weird that there is no way to connect orders to a market
+type Order @entity {
+    # event OrderCreated
+    id: ID! # orderID
+    orderType: String! # bid or asked, derived from the enum
+    amount: BigInt!
+    price: BigInt!
+    creator: Bytes!
+    moneyEscrowed: BigInt!
+    sharesEscrowed: BigInt!
+    tradeGroupIDCreator: Bytes!
+    universe: Bytes!
+    shareToken: Bytes!
+
+    # event OrderCanceled
+    canceller: Bytes
+    tokenRefund: BigInt
+    sharesRefund: BigInt
+
+    # event OrderFilled
+    filler: [Bytes!]!
+    numCreatorShares: [BigInt!]!
+    numCreatorTokens: [BigInt!]!
+    numFillerShares: [BigInt!]!
+    numFillerTokens: [BigInt!]!
+    marketCreatorFees: [BigInt!]!
+    reporterFees: [BigInt!]!
+    amountFilled: [BigInt!]!
+    tradeGroupIDFilled: [Bytes!]!
+}
+
+# event TradingProceedsClaimed (also used in Market)
+type ClaimedTradingProceed @entity {
+    id: ID! # market
+    universe: Bytes!
+    shareToken: Bytes!
+    sender: Bytes!
+    numShares: BigInt!
+    numPayoutTokens: BigInt!
+    finalTokenBalance: BigInt
+}
+
+# instantiated by TokenMinted
+# event TokenMinted, TokenBurned, TokenTransferred
+type Token @entity {
+    id: ID! # token Address
+    universe: Bytes!
+    market: Bytes!
+    tokenType: String! # derived from enum
+    owners: [TokenOwner!]! @derivedFrom(field: "tokenAddress")
+}
+
+type TokenOwner @entity {
+    id: ID! # concatenation of token address and owner
+    tokenAddress: Bytes!
+    tokenOwner: Bytes! # needed to reference back to user
+    amount: BigInt!
+}
+
+
+# event DisputeWindowCreated (NOTE, NOT ON MAIN NET)
+type DisputeWindow @entity {
+    id: ID! # id
+    universe: Bytes!
+    startTime: BigInt!
+    endTime: BigInt!
+    disputeWindow: Bytes!
+}
+
+# aggregate the data to represent a user, to display in the Augur dApp
+type User @entity {
+    id: ID! # user account
+
+    marketsCreated: [Bytes!]!
+    claimedTrades: [ClaimedTradingProceed!]! @derivedFrom(field: "sender")
+    initialReports: [InitialReport!]! @derivedFrom(field: "reporter")
+    disputeCrowdsourcers: [Bytes!]! # array of dispute crowdsourcer addresses a user has participated in
+    ordersCreated: [Bytes!]! #orderID
+    ordersCancelled: [Bytes!]! # orderID
+    ordersFilled: [Bytes!]! # orderID
+    tokensOwned: [TokenOwner!]! @derivedFrom(field: "tokenOwner")
+
+
+
+
+}
+
+
+
+
